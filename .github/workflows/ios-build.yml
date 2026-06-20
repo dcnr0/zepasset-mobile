@@ -30,21 +30,16 @@ jobs:
 
       - name: Package Unsigned IPA Archive
         run: |
-          # 1. Navigate to the actual build outputs directory
           cd build/zepasset/ios/xcode/build/Debug-iphonesimulator/
-          
-          # 2. Build standard structural Payload scaffolding required for IPA packaging
           mkdir -p Payload
-          
-          # 3. Clone the compiled application into the structural layer
           cp -R ZepAsset.app Payload/
-          
-          # 4. Standard zip compression execution mapping outward to the root directory
+          # This saves ZepAsset.ipa straight to the root folder
           zip -r ../../../../../../ZepAsset.ipa Payload
           
       - name: Archive Production Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ZepAsset-Mobile-Build
-          path: build/zepasset/ios/xcode/ZepAsset.ipa
+          # 👇 FIXED: Points directly to the root folder where the zip was saved
+          path: ZepAsset.ipa
           retention-days: 5
