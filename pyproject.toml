@@ -16,7 +16,6 @@ icon = "icons/zepasset"
 universal = true
 
 [tool.briefcase.app.zepasset.ios]
-requires_device = true
+requires_device = false
 supported_devices = ["iPhone", "iPad"]
-build_target = "device"
 code_signing_allowed = false
