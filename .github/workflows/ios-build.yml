@@ -37,23 +37,21 @@ jobs:
         run: briefcase create ios --no-input
 
       - name: Compile App Binary Layout
-        env:
-          CODE_SIGNING_ALLOWED: "NO"
-          CODE_SIGNING_REQUIRED: "NO"
-          CODE_SIGN_IDENTITY: ""
         run: briefcase build ios --no-input -u
 
       - name: Package Unsigned IPA Archive
         run: |
-          # 1. Track down the precise directory path where the binary bundle sits
-          APP_PATH=$(find build/zepasset/ios/xcode/build -name "ZepAsset.app" -type d | head -n 1)
+          # Dynamic fallback scanner to locate valid hardware binary builds
+          APP_PATH=$(find build/zepasset/ios/xcode/build -name "ZepAsset.app" -type d | grep -v "iphonesimulator" | head -n 1)
+          
+          if [ -z "$APP_PATH" ]; then
+            APP_PATH=$(find build/zepasset/ios/xcode/build -name "ZepAsset.app" -type d | head -n 1)
+          fi
+          
           echo "Target binary discovered at: $APP_PATH"
-          
-          # 2. Extract and move into its parent build folder environment
           TARGET_DIR=$(dirname "$APP_PATH")
-          cd "$TARGET_DIR"
           
-          # 3. Assemble and compress into standard deployment layout structure
+          cd "$TARGET_DIR"
           mkdir -p Payload
           cp -R ZepAsset.app Payload/
           zip -r "$GITHUB_WORKSPACE/ZepAsset.ipa" Payload
