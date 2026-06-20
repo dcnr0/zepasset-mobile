@@ -43,17 +43,24 @@ img.save('icon.png')
         run: briefcase create ios --no-input
 
       - name: Compile App Binary Layout
-        run: briefcase build ios --no-input --update-resources -- CODE_SIGNING_ALLOWED=NO
+        # 👇 GLOBAL ENV VARIABLES FORCE XCODE TO SKIP SIGNING COMPILATION CHECKS
+        env:
+          CODE_SIGNING_ALLOWED: "NO"
+          CODE_SIGNING_REQUIRED: "NO"
+          CODE_SIGN_IDENTITY: ""
+        run: briefcase build ios --no-input --update-resources
 
       - name: Package Unsigned IPA Archive
         run: |
-          # Safe conditional checking structure that won't break the YAML parser
+          # Robust lookups for the generated hardware build folder
           if [ -d "build/zepasset/ios/xcode/build/Unsigned-iphoneos" ]; then
             cd build/zepasset/ios/xcode/build/Unsigned-iphoneos
           elif [ -d "build/zepasset/ios/xcode/build/Release-iphoneos" ]; then
             cd build/zepasset/ios/xcode/build/Release-iphoneos
-          else
+          elif [ -d "build/zepasset/ios/xcode/build/Debug-iphoneos" ]; then
             cd build/zepasset/ios/xcode/build/Debug-iphoneos
+          else
+            cd build/zepasset/ios/xcode/build/Debug-iphonesimulator
           fi
           
           mkdir -p Payload
