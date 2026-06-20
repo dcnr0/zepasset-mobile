@@ -1,0 +1,6 @@
+// Add or update these values inside the project build target blocks
+IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+SDKROOT = iphoneos;
+CODE_SIGN_IDENTITY = "-";
+CODE_SIGNING_ALLOWED = NO;
+CODE_SIGNING_REQUIRED = NO;
