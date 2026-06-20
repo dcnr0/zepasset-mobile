@@ -22,24 +22,30 @@ jobs:
           python -m pip install --upgrade pip
           pip install briefcase
 
+      # 👇 AUTO-GENERATES ALL 13 REQUIRED SIZES FROM YOUR SINGLE icon.png
+      - name: Generate Icon Assets Matrix
+        run: |
+          mkdir -p icons
+          for size in 20 29 40 58 60 76 80 87 120 152 167 180 1024; do
+            sips -z $size $size icon.png --out icons/zepasset-$size.png
+          done
+
       - name: Create Briefcase iOS Scaffold
         run: briefcase create ios --no-input
 
       - name: Compile App Binary Layout
-        run: briefcase build ios --no-input
+        run: briefcase build ios --no-input --update-resources
 
       - name: Package Unsigned IPA Archive
         run: |
           cd build/zepasset/ios/xcode/build/Debug-iphonesimulator/
           mkdir -p Payload
           cp -R ZepAsset.app Payload/
-          # This saves ZepAsset.ipa straight to the root folder
           zip -r ../../../../../../ZepAsset.ipa Payload
           
       - name: Archive Production Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ZepAsset-Mobile-Build
-          # 👇 FIXED: Points directly to the root folder where the zip was saved
           path: ZepAsset.ipa
           retention-days: 5
