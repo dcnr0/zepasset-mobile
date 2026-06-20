@@ -1,0 +1,22 @@
+[tool.briefcase]
+project_name = "ZepAsset"
+bundle = "org.z3pti"
+version = "1.0.0"
+author = "z3pti"
+
+[tool.briefcase.app.zepasset]
+formal_name = "ZepAsset"
+description = "ZepAsset Mobile Desktop Engine Wrapper"
+modules = ["zepasset"]
+sources = ["src/zepasset"]
+
+[tool.briefcase.app.zepasset.macOS]
+universal = true
+
+[tool.briefcase.app.zepasset.ios]
+requires_device = true
+supported_devices = ["iPhone", "iPad"]
+
+[tool.briefcase.app.zepasset.ios.dependencies]
+pillow = "*"
+requests = "*"
