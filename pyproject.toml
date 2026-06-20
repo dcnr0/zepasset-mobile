@@ -9,8 +9,8 @@ formal_name = "ZepAsset"
 description = "ZepAsset Mobile Desktop Engine Wrapper"
 modules = ["zepasset"]
 sources = ["src/zepasset"]
-# 👇 THIS FINDS THE REQUIRING LICENSING RULE TO BYPASS THE EXIT CODE 100
 license = "MIT"
+icon = "icons/zepasset"
 
 [tool.briefcase.app.zepasset.macOS]
 universal = true
@@ -18,8 +18,5 @@ universal = true
 [tool.briefcase.app.zepasset.ios]
 requires_device = true
 supported_devices = ["iPhone", "iPad"]
+# 👇 Forces Xcode to drop identity signatures entirely during device compilation
 code_signing_allowed = false
-
-[tool.briefcase.app.zepasset.ios.dependencies]
-pillow = "*"
-requests = "*"
