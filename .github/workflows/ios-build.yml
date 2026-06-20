@@ -18,24 +18,21 @@ jobs:
           cache: 'pip'
 
       - name: Install System Dependencies
-        # 👇 ADDED 'pillow' HERE so Python can draw the backup icon safely!
         run: |
           python -m pip install --upgrade pip
-          pip install briefcase pillow
+          pip install briefcase
 
       - name: Generate Icon Assets Matrix
         run: |
           mkdir -p icons
+          
+          # 👇 PURE BASH FALLBACK: No Python imports, completely safe from YAML parsing issues
           if [ ! -f "icon.png" ]; then
-            echo "icon.png not found. Creating placeholder..."
-            python -c "
-from PIL import Image, ImageDraw
-img = Image.new('RGBA', (1024, 1024), (20, 5, 7, 255))
-d = ImageDraw.Draw(img)
-d.rectangle([64, 64, 960, 960], outline=(255, 51, 51, 255), width=16)
-img.save('icon.png')
-            "
+            echo "icon.png not found. Generating simple native canvas template..."
+            cc -x c - -o create_blank <<< "int main() { return 0; }"
+            sips -s format png -z 1024 1024 /System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericApplicationIcon.icns --out icon.png
           fi
+          
           for size in 20 29 40 58 60 76 80 87 120 152 167 180 1024; do
             sips -z $size $size icon.png --out icons/zepasset-$size.png
           done
