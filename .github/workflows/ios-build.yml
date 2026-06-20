@@ -27,14 +27,15 @@ jobs:
           CODE_SIGNING_ALLOWED=NO \
           CODE_SIGNING_REQUIRED=NO \
           CODE_SIGNING_IDENTITY="-" \
-          PROVISIONING_PROFILE_SPECIFIER=""
+          PROVISIONING_PROFILE_SPECIFIER="" \
+          SYMROOT=build
 
     - name: Package into IPA
       run: |
         mkdir -p Payload
+        # Copying from the explicit build destination directory
         cp -r build/Release-iphoneos/ZepAsset.app Payload/
-        zip -r ZepAsset.zip Payload
-        mv ZepAsset.zip ZepAsset.ipa
+        zip -r ZepAsset.ipa Payload
 
     - name: Upload IPA Artifact
       uses: actions/upload-artifact@v4
