@@ -1,76 +1,43 @@
-name: ZepAsset V1
+name: Build ZepAsset iOS IPA
+
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build-ios:
-    runs-on: macos-14
+  build:
+    runs-on: macos-latest
+
     steps:
-      - name: Checkout Code Matrix
-        uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-      - name: Set up Python Environment
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
+    - name: Set up Xcode Version
+      run: |
+        sudo xcode-select -s /Applications/Xcode.app
 
-      - name: Install System Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install briefcase
+    - name: Compile Unsigned App Binary
+      run: |
+        xcodebuild clean build \
+          -project ZepAsset.xcodeproj \
+          -scheme ZepAsset \
+          -configuration Release \
+          -destination 'generic/platform=iOS' \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_IDENTITY="-" \
+          PROVISIONING_PROFILE_SPECIFIER=""
 
-      - name: Generate Icon Assets Matrix
-        run: |
-          mkdir -p icons
-          if [ ! -f "icon.png" ]; then
-            echo "icon.png not found. Generating template..."
-            sips -s format png -z 1024 1024 /System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericApplicationIcon.icns --out icon.png
-          fi
-          for size in 20 29 40 58 60 76 80 87 120 152 167 180 1024; do
-            sips -z $size $size icon.png --out icons/zepasset-$size.png
-          done
+    - name: Package into IPA
+      run: |
+        mkdir -p Payload
+        cp -r build/Release-iphoneos/ZepAsset.app Payload/
+        zip -r ZepAsset.zip Payload
+        mv ZepAsset.zip ZepAsset.ipa
 
-      - name: Create Briefcase iOS Scaffold
-        run: briefcase create ios --no-input
-
-      # 👇 COMPILES HARDWARE SLICES WITHOUT REQUIRING KEYCHAIN SIGNATURES
-      - name: Compile App Binary Layout Natively
-        run: |
-          cd build/zepasset/ios/xcode
-          xcodebuild -project ZepAsset.xcodeproj \
-                     -scheme ZepAsset \
-                     -configuration Release \
-                     -sdk iphonesimulator \
-                     ONLY_ACTIVE_ARCH=NO \
-                     CODE_SIGNING_ALLOWED=NO \
-                     CODE_SIGNING_REQUIRED=NO \
-                     CODE_SIGN_IDENTITY="" \
-                     PROVISIONING_PROFILE_REQUIRED=NO
-
-      - name: Patch Configuration and Package IPA
-        run: |
-          APP_PATH=$(find build/zepasset/ios/xcode/build -name "ZepAsset.app" -type d | head -n 1)
-          echo "Discovered compiled app target at: $APP_PATH"
-          
-          # Force the plist configuration to declare physical hardware support for E-Sign
-          plutil -replace LSRequiresIPhoneOS -bool true "$APP_PATH/Info.plist"
-          plutil -replace CFBundleSupportedPlatforms -json '["iPhoneOS"]' "$APP_PATH/Info.plist"
-          plutil -remove DTPlatformName "$APP_PATH/Info.plist" 2>/dev/null || true
-          plutil -insert DTPlatformName -string "iphoneos" "$APP_PATH/Info.plist"
-          
-          TARGET_DIR=$(dirname "$APP_PATH")
-          cd "$TARGET_DIR"
-          
-          mkdir -p Payload
-          cp -R ZepAsset.app Payload/
-          zip -r "$GITHUB_WORKSPACE/ZepAsset.ipa" Payload
-          
-      - name: Archive Production Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ZepAsset-Mobile-Build
-          path: ZepAsset.ipa
-          retention-days: 5
+    - name: Upload IPA Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ZepAsset-Unsigned-IPA
+        path: ZepAsset.ipa
