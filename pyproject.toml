@@ -18,4 +18,5 @@ universal = true
 [tool.briefcase.app.zepasset.ios]
 requires_device = true
 supported_devices = ["iPhone", "iPad"]
+build_target = "device"
 code_signing_allowed = false
