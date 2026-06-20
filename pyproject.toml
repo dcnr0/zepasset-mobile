@@ -18,5 +18,4 @@ universal = true
 [tool.briefcase.app.zepasset.ios]
 requires_device = true
 supported_devices = ["iPhone", "iPad"]
-# 👇 Forces Xcode to drop identity signatures entirely during device compilation
 code_signing_allowed = false
