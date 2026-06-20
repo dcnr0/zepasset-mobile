@@ -30,7 +30,7 @@ jobs:
 
       - name: Package Unsigned IPA Archive
         run: |
-          cd build/zepasset/ios/xcode/build/Release-iphoneos
+          cd build/zepasset/ios/xcode/build/Debug-iphonesimulator
           mkdir -p Payload
           cp -r ZepAsset.app Payload/
           zip -r ../../../../../../../ZepAsset.ipa Payload
