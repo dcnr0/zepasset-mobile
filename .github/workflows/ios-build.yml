@@ -7,15 +7,17 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    # Changed to macos-14 to guarantee a modern Xcode build environment
+    runs-on: macos-14
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Set up Xcode Version
+    - name: Set up Modern Xcode Version
       run: |
-        sudo xcode-select -s /Applications/Xcode.app
+        # Force the runner to select Xcode 15 or newer
+        sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
 
     - name: Compile Unsigned App Binary
       run: |
@@ -33,7 +35,6 @@ jobs:
     - name: Package into IPA
       run: |
         mkdir -p Payload
-        # Copying from the explicit build destination directory
         cp -r build/Release-iphoneos/ZepAsset.app Payload/
         zip -r ZepAsset.ipa Payload
 
