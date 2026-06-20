@@ -43,24 +43,16 @@ img.save('icon.png')
         run: briefcase create ios --no-input
 
       - name: Compile App Binary Layout
-        env:
-          CODE_SIGNING_ALLOWED: "NO"
-          CODE_SIGNING_REQUIRED: "NO"
-          CODE_SIGN_IDENTITY: ""
-        run: briefcase build ios --no-input --update-resources
+        # 👇 Forces a generic physical iOS device architecture target compilation pass
+        run: briefcase build ios --device "iOS" --no-input --update-resources -- CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
 
       - name: Package Unsigned IPA Archive
         run: |
-          if [ -d "build/zepasset/ios/xcode/build/Unsigned-iphoneos" ]; then
-            cd build/zepasset/ios/xcode/build/Unsigned-iphoneos
-          elif [ -d "build/zepasset/ios/xcode/build/Release-iphoneos" ]; then
-            cd build/zepasset/ios/xcode/build/Release-iphoneos
-          elif [ -d "build/zepasset/ios/xcode/build/Debug-iphoneos" ]; then
-            cd build/zepasset/ios/xcode/build/Debug-iphoneos
-          else
-            cd build/zepasset/ios/xcode/build/Debug-iphonesimulator
-          fi
+          # Locate whatever iphoneos hardware build folder Xcode created dynamically
+          TARGET_DIR=$(ls -d build/zepasset/ios/xcode/build/*-iphoneos | head -n 1)
+          echo "Target build directory found: $TARGET_DIR"
           
+          cd "$TARGET_DIR"
           mkdir -p Payload
           cp -R ZepAsset.app Payload/
           zip -r ../../../../../../ZepAsset.ipa Payload
