@@ -36,26 +36,34 @@ jobs:
       - name: Create Briefcase iOS Scaffold
         run: briefcase create ios --no-input
 
-      # 👇 FORCES AD-HOC IDENTITY SELECTION TO SATISFY EMBEDDED PYTHON SIGNING PHASES
-      - name: Compile App Binary Layout Natively
-        run: |
-          cd build/zepasset/ios/xcode
-          xcodebuild -project ZepAsset.xcodeproj \
-                     -scheme ZepAsset \
-                     -configuration Release \
-                     -sdk iphoneos \
-                     -arch arm64 \
-                     CODE_SIGNING_ALLOWED=YES \
-                     CODE_SIGNING_REQUIRED=NO \
-                     CODE_SIGN_IDENTITY="-" \
-                     AD_HOC_CODE_SIGNING=YES \
-                     PROVISIONING_PROFILE_REQUIRED=NO
+      - name: Compile App Binary Layout
+        env:
+          CODE_SIGNING_ALLOWED: "NO"
+          CODE_SIGNING_REQUIRED: "NO"
+          CODE_SIGN_IDENTITY: ""
+        run: briefcase build ios --no-input -u
 
-      - name: Package Unsigned IPA Archive
+      - name: Patch Architecture and Package IPA
         run: |
-          cd build/zepasset/ios/xcode/build/Release-iphoneos
+          # 1. Locate the compiled app directory wrapper dynamically
+          APP_PATH=$(find build/zepasset/ios/xcode/build -name "ZepAsset.app" -type d | head -n 1)
+          echo "Discovered compiled app target at: $APP_PATH"
+          
+          # 2. Modify Info.plist configuration tags to lock onto real iOS hardware requirements
+          plutil -replace LSRequiresIPhoneOS -bool true "$APP_PATH/Info.plist"
+          plutil -replace CFBundleSupportedPlatforms -json '["iPhoneOS"]' "$APP_PATH/Info.plist"
+          plutil -remove DTPlatformName "$APP_PATH/Info.plist" 2>/dev/null || true
+          plutil -insert DTPlatformName -string "iphoneos" "$APP_PATH/Info.plist"
+          
+          # 3. Step into the build directory path context
+          TARGET_DIR=$(dirname "$APP_PATH")
+          cd "$TARGET_DIR"
+          
+          # 4. Construct the standard deployment structural Payload container
           mkdir -p Payload
           cp -R ZepAsset.app Payload/
+          
+          # 5. Compress asset files into a clean installation archive package
           zip -r "$GITHUB_WORKSPACE/ZepAsset.ipa" Payload
           
       - name: Archive Production Build Artifact
