@@ -16,6 +16,8 @@ universal = true
 [tool.briefcase.app.zepasset.ios]
 requires_device = true
 supported_devices = ["iPhone", "iPad"]
+# 👇 THIS LINE TELLS XCODE TO SKIP APPLE CODE SIGNING CHECKS
+code_signing_allowed = false
 
 [tool.briefcase.app.zepasset.ios.dependencies]
 pillow = "*"
