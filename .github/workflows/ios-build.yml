@@ -37,7 +37,6 @@ jobs:
         run: briefcase create ios --no-input
 
       - name: Compile App Binary Layout
-        # 👇 Safe configuration variables passed directly into the step environment
         env:
           CODE_SIGNING_ALLOWED: "NO"
           CODE_SIGNING_REQUIRED: "NO"
@@ -46,14 +45,18 @@ jobs:
 
       - name: Package Unsigned IPA Archive
         run: |
-          # Finds whatever active build directory matches the output scheme
-          TARGET_DIR=$(ls -d build/zepasset/ios/xcode/build/*-iphoneos 2>/dev/null | head -n 1 || ls -d build/zepasset/ios/xcode/build/*-iphonesimulator 2>/dev/null | head -n 1)
-          echo "Target build directory found: $TARGET_DIR"
+          # 1. Track down the precise directory path where the binary bundle sits
+          APP_PATH=$(find build/zepasset/ios/xcode/build -name "ZepAsset.app" -type d | head -n 1)
+          echo "Target binary discovered at: $APP_PATH"
           
+          # 2. Extract and move into its parent build folder environment
+          TARGET_DIR=$(dirname "$APP_PATH")
           cd "$TARGET_DIR"
+          
+          # 3. Assemble and compress into standard deployment layout structure
           mkdir -p Payload
           cp -R ZepAsset.app Payload/
-          zip -r ../../../../../../ZepAsset.ipa Payload
+          zip -r "$GITHUB_WORKSPACE/ZepAsset.ipa" Payload
           
       - name: Archive Production Build Artifact
         uses: actions/upload-artifact@v4
