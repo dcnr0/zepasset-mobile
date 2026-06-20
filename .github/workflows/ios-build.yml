@@ -36,22 +36,24 @@ jobs:
       - name: Create Briefcase iOS Scaffold
         run: briefcase create ios --no-input
 
-      - name: Compile App Binary Layout
-        run: briefcase build ios --no-input -u
+      # 👇 FORCES THE NATIVE COMPILER TO LOCK ONTO PHYSICAL ARM64 HARDWARE TARGETS
+      - name: Compile App Binary Layout Natively
+        run: |
+          cd build/zepasset/ios/xcode
+          xcodebuild -project ZepAsset.xcodeproj \
+                     -scheme ZepAsset \
+                     -configuration Release \
+                     -sdk iphoneos \
+                     -arch arm64 \
+                     CODE_SIGNING_ALLOWED=NO \
+                     CODE_SIGNING_REQUIRED=NO \
+                     CODE_SIGN_IDENTITY="" \
+                     PROVISIONING_PROFILE_REQUIRED=NO
 
       - name: Package Unsigned IPA Archive
         run: |
-          # Dynamic fallback scanner to locate valid hardware binary builds
-          APP_PATH=$(find build/zepasset/ios/xcode/build -name "ZepAsset.app" -type d | grep -v "iphonesimulator" | head -n 1)
-          
-          if [ -z "$APP_PATH" ]; then
-            APP_PATH=$(find build/zepasset/ios/xcode/build -name "ZepAsset.app" -type d | head -n 1)
-          fi
-          
-          echo "Target binary discovered at: $APP_PATH"
-          TARGET_DIR=$(dirname "$APP_PATH")
-          
-          cd "$TARGET_DIR"
+          # Target the true, uncorrupted device-compiled directory 
+          cd build/zepasset/ios/xcode/build/Release-iphoneos
           mkdir -p Payload
           cp -R ZepAsset.app Payload/
           zip -r "$GITHUB_WORKSPACE/ZepAsset.ipa" Payload
