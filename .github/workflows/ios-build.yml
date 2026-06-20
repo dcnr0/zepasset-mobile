@@ -36,7 +36,7 @@ jobs:
       - name: Create Briefcase iOS Scaffold
         run: briefcase create ios --no-input
 
-      # 👇 FORCES THE NATIVE COMPILER TO LOCK ONTO PHYSICAL ARM64 HARDWARE TARGETS
+      # 👇 FORCES AD-HOC IDENTITY SELECTION TO SATISFY EMBEDDED PYTHON SIGNING PHASES
       - name: Compile App Binary Layout Natively
         run: |
           cd build/zepasset/ios/xcode
@@ -45,14 +45,14 @@ jobs:
                      -configuration Release \
                      -sdk iphoneos \
                      -arch arm64 \
-                     CODE_SIGNING_ALLOWED=NO \
+                     CODE_SIGNING_ALLOWED=YES \
                      CODE_SIGNING_REQUIRED=NO \
-                     CODE_SIGN_IDENTITY="" \
+                     CODE_SIGN_IDENTITY="-" \
+                     AD_HOC_CODE_SIGNING=YES \
                      PROVISIONING_PROFILE_REQUIRED=NO
 
       - name: Package Unsigned IPA Archive
         run: |
-          # Target the true, uncorrupted device-compiled directory 
           cd build/zepasset/ios/xcode/build/Release-iphoneos
           mkdir -p Payload
           cp -R ZepAsset.app Payload/
