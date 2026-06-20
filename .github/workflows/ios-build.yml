@@ -1,0 +1,43 @@
+name: ZepAsset V1
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-14
+    steps:
+      - name: Checkout Code Matrix
+        uses: actions/checkout@v4
+
+      - name: Set up Python Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install System Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install briefcase
+
+      - name: Create Briefcase iOS Scaffold
+        run: briefcase create ios --no-input
+
+      - name: Compile App Binary Layout
+        run: briefcase build ios --no-input
+
+      - name: Package Unsigned IPA Archive
+        run: |
+          cd build/zepasset/ios/xcode/build/Release-iphoneos
+          mkdir -p Payload
+          cp -r ZepAsset.app Payload/
+          zip -r ../../../../../../../ZepAsset.ipa Payload
+          
+      - name: Archive Production Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZepAsset-Mobile-Build
+          path: ZepAsset.ipa
+          retention-days: 5
