@@ -7,17 +7,17 @@ on:
 
 jobs:
   build:
-    # Changed to macos-14 to guarantee a modern Xcode build environment
-    runs-on: macos-14
+    # Upgrade to macos-15 for the newest project parser environments
+    runs-on: macos-15
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Set up Modern Xcode Version
+    - name: Set up Newest Xcode Version
       run: |
-        # Force the runner to select Xcode 15 or newer
-        sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+        # Use the standardized path mapping for the latest stable toolsets
+        sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
     - name: Compile Unsigned App Binary
       run: |
