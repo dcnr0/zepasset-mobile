@@ -25,14 +25,10 @@ jobs:
       - name: Generate Icon Assets Matrix
         run: |
           mkdir -p icons
-          
-          # 👇 PURE BASH FALLBACK: No Python imports, completely safe from YAML parsing issues
           if [ ! -f "icon.png" ]; then
-            echo "icon.png not found. Generating simple native canvas template..."
-            cc -x c - -o create_blank <<< "int main() { return 0; }"
+            echo "icon.png not found. Generating template..."
             sips -s format png -z 1024 1024 /System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/GenericApplicationIcon.icns --out icon.png
           fi
-          
           for size in 20 29 40 58 60 76 80 87 120 152 167 180 1024; do
             sips -z $size $size icon.png --out icons/zepasset-$size.png
           done
@@ -41,11 +37,17 @@ jobs:
         run: briefcase create ios --no-input
 
       - name: Compile App Binary Layout
-        run: briefcase build ios --device "iOS" --no-input --update-resources -- CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+        # 👇 Safe configuration variables passed directly into the step environment
+        env:
+          CODE_SIGNING_ALLOWED: "NO"
+          CODE_SIGNING_REQUIRED: "NO"
+          CODE_SIGN_IDENTITY: ""
+        run: briefcase build ios --no-input -u
 
       - name: Package Unsigned IPA Archive
         run: |
-          TARGET_DIR=$(ls -d build/zepasset/ios/xcode/build/*-iphoneos | head -n 1)
+          # Finds whatever active build directory matches the output scheme
+          TARGET_DIR=$(ls -d build/zepasset/ios/xcode/build/*-iphoneos 2>/dev/null | head -n 1 || ls -d build/zepasset/ios/xcode/build/*-iphonesimulator 2>/dev/null | head -n 1)
           echo "Target build directory found: $TARGET_DIR"
           
           cd "$TARGET_DIR"
